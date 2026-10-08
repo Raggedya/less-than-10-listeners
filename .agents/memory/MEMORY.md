@@ -1,0 +1,2 @@
+- [Discovery product constraints](discovery-product-constraints.md) — active human bands only, fewer than ten starting listeners, fair turns, minimal art-led mobile UI; do not publish without permission.
+- [Browser audio verification](browser-audio-verification.md) — headless real-time audio may stall; waveform and gesture checks do not prove physical iPhone audibility.

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Less Than 10 Listeners"
+description = "Mobile-first discovery prototype for active human bands, with cinematic coverflow, persistent fair rotation, transparent engagement tracking and a protected administrator dashboard."
+version = "1.0.0"
+id = "artifacts/less-than-10"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19472
+
+[services.development]
+run = "pnpm --filter @workspace/less-than-10 run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/less-than-10", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/less-than-10/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19472"
+BASE_PATH = "/"

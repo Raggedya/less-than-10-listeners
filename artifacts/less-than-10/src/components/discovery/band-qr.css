@@ -1,0 +1,11 @@
+.lt-qr-dialog { max-width: min(360px, calc(100vw - 28px)); width: 360px; max-height: calc(100dvh - 32px); overflow-y: auto; background: #0d0c09; color: #eee5d1; border: 1px solid #c9a85c99; border-radius: 12px; padding: 0; margin: auto; box-shadow: 0 30px 100px #000c; }
+.lt-qr-dialog::backdrop { background: #000b; backdrop-filter: blur(6px); }
+.lt-qr-content { position: relative; padding: 28px 20px 20px; text-align: center; font-family: var(--app-font-sans); }
+.lt-qr-content h2 { font-family: var(--app-font-serif); font-size: 32px; line-height: 1.2; margin: 10px 12px; overflow-wrap: anywhere; }
+.lt-qr-content p { font-size: 12px; line-height: 1.5; color: #bdb49f; margin: 10px 0 18px; }
+.lt-qr-close { position: absolute; right: 4px; top: 4px; display: grid; place-items: center; width: 44px; height: 44px; color: #d9bb74; background: none; border: 0; cursor: pointer; }
+.lt-qr-content canvas { width: min(256px, 100%) !important; height: auto !important; aspect-ratio: 1; margin: 0 auto 16px; }
+.lt-qr-link-label { display: block; font-size: 11px; color: #d9bb74; margin-bottom: 8px; }
+.lt-qr-content input { width: 100%; min-height: 44px; padding: 10px; border: 1px solid #847044; border-radius: 4px; background: #15130d; color: #eee5d1; font-size: 12px; }
+.lt-qr-content .lt-qr-note { font-size: 10px; margin-bottom: 0; }
+.lt-qr-content input:focus-visible, .lt-qr-close:focus-visible { outline: 2px solid #e0c582; outline-offset: 2px; }
