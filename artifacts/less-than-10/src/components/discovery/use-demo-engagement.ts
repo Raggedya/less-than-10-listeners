@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
-import type { Band } from '@workspace/api-client-react';
+import type { Band } from './demo-band';
 
 interface Activity { clicks: number; loved: boolean; shares: number }
 type ActivityMap = Record<string, Activity>;
