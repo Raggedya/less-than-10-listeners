@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { Band } from '@workspace/api-client-react';
+import type { Band } from './demo-band';
 import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
 import { advanceReel, centreCrossings, createReel, releaseReel, snapTo } from './reel-physics';
 import { useReelAudio } from './use-reel-audio';
