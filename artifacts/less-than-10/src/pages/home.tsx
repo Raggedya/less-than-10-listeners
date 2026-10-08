@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Band } from '@workspace/api-zod';
+import type { Band } from '../components/discovery/demo-band';
 import { ExternalLink, Heart, Share2, QrCode } from 'lucide-react';
 import { Coverflow } from '../components/discovery/Coverflow';
 import { useDemoEngagement } from '../components/discovery/use-demo-engagement';
