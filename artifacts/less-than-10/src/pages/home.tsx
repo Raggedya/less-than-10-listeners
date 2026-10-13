@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import type { Band } from '../components/discovery/demo-band';
-import { ExternalLink, Heart, Share2, QrCode } from 'lucide-react';
+import { Play, Heart, Share2, QrCode } from 'lucide-react';
 import { Coverflow } from '../components/discovery/Coverflow';
 import { useDemoEngagement } from '../components/discovery/use-demo-engagement';
 import { BandQR } from '../components/discovery/BandQR';
+import { VideoPlayer } from '../components/discovery/VideoPlayer';
 import './final-layout.css';
 
 const GOLD = '#c9a85c';
 
 // Static GitHub Pages demo data. These are fictional prototype records.
-// Engagement remains device-local; no real Spotify listener or click claims are made.
+// Engagement remains device-local; no YouTube views or clicks are claimed.
+// The first fictional card uses YouTube's official IFrame API example solely to test embedding.
 const bands: Band[] = [
   ['Velvet Static', 'Dream pop', 'After the Rain', 4, 18, 11],
   ['Sunroom Echo', 'Indie folk', 'Slow Morning', 7, 24, 27],
@@ -21,7 +23,9 @@ const bands: Band[] = [
   name: String(name),
   genre: String(genre),
   trackName: String(trackName),
-  spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(String(name))}`,
+  spotifyUrl: '',
+  videoId: index === 0 ? 'M7lc1UVf-VE' : undefined,
+  videoUrl: index === 0 ? 'https://www.youtube.com/watch?v=M7lc1UVf-VE' : undefined,
   startingListeners: Number(start),
   startingDate: '2026-09-01',
   currentListeners: Number(current),
@@ -37,18 +41,10 @@ const bands: Band[] = [
   metrics: { clicks: 0, uniqueClicks: 0, loves: 0, shares: 0, qrScans: 0, turns: 0, views: 0 },
 }));
 
-function SpotifyMark() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none">
-      <circle cx="12" cy="12" r="11" fill="#2f9dff" />
-      <path d="M6 9.2c4-1.2 8.3-.8 12 1.1M6.8 12.6c3.3-.9 6.6-.6 9.6.9M7.6 15.8c2.5-.6 5-.4 7.3.7" stroke="#030d2a" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export default function Home() {
   const [sel, setSel] = useState<number | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
   const initialIndex = Math.max(
     0,
     bands.findIndex((b) => String(b.id) === new URLSearchParams(window.location.search).get('band')),
@@ -65,9 +61,9 @@ export default function Home() {
         <header className="relative z-10" style={{ animation: 'ltl-in .9s both' }}>
           <h1 data-testid="text-title" className="flex flex-col items-center font-bold uppercase leading-[0.88]">
             <span className="text-[clamp(1.9rem,9vw,3.6rem)] tracking-[0.04em] text-white">Less than 10</span>
-            <span className="ltl-gold text-[clamp(1.3rem,6vw,2.5rem)] tracking-[0.2em]">Listeners</span>
+            <span className="ltl-gold text-[clamp(1.3rem,6vw,2.5rem)] tracking-[0.2em]">Views</span>
           </h1>
-          <p className="mt-2 text-[10px] uppercase tracking-[0.24em] text-[#efe6d2]/60">Please give them a listen. It would mean a lot.</p>
+          <p className="mt-2 text-[10px] uppercase tracking-[0.24em] text-[#efe6d2]/60">Please give their music video a watch. It would mean a lot.</p>
         </header>
 
         <section className="relative z-10 flex w-full flex-col items-center">
@@ -79,13 +75,19 @@ export default function Home() {
           </div>
           <h2 key={band.id} data-testid="selected-band" aria-live="polite" aria-atomic="true" className="ltf-name" style={{ animation: 'ltl-in .5s both' }}>{band.name}</h2>
           <div data-testid="text-stats" className="ltf-stats">
-            <p data-testid="text-starting">Started with <span className="ltf-gold">{band.startingListeners}</span> monthly listeners</p>
-            <p data-testid="text-clicks"><span className="ltf-gold">{metrics.clicks}</span> more have now clicked to listen</p>
+            <p data-testid="text-starting">Started with <span className="ltf-gold">{band.startingListeners}</span> views when discovered</p>
+            <p data-testid="text-clicks"><span className="ltf-gold">{metrics.clicks}</span> more have clicked to watch on this device</p>
           </div>
-          <a data-testid="link-listen-spotify" href={band.spotifyUrl} target="_blank" rel="noopener noreferrer"
-            onClick={eng.recordClick} onAuxClick={eng.recordClick} className="ltf-listen">
-            <SpotifyMark /> Listen on Spotify <ExternalLink size={14} />
-          </a>
+          <button data-testid="button-watch-video" type="button" onClick={() => setVideoOpen(true)} className="ltf-listen">
+            <Play size={18} fill="#2f9dff" color="#2f9dff" /> Watch video
+          </button>
+          <VideoPlayer
+            open={videoOpen}
+            title={band.videoId ? 'YouTube embed demonstration — not a qualifying music video' : band.name}
+            videoId={band.videoId}
+            videoUrl={band.videoUrl}
+            onClose={() => setVideoOpen(false)}
+          />
           <div className="ltf-rule" />
           <div className="ltf-ctls">
             <button data-testid="button-love" type="button" className="ltf-ctl" aria-pressed={metrics.loved} aria-label="Love" onClick={eng.toggleLove}>
@@ -103,10 +105,10 @@ export default function Home() {
         </section>
 
         <footer data-testid="text-demo-info" className="ltf-foot relative z-10">
-          Fictional demo · Starting counts are samples. Spotify opens a demo search. Activity is device-local.
+          Fictional demo · Starting view counts are invented examples. First card tests YouTube embedding with a non-qualifying demonstration clip. Activity is device-local.
           <details>
             <summary>How counts work</summary>
-            Counts are this device's button actions, not unique people or listens; shares include link copies.
+            Counts are this device's actions, not YouTube video views or unique viewers; shares include link copies.
             {!eng.storageAvailable && ' Storage is unavailable, so counts reset on reload.'}
           </details>
         </footer>
