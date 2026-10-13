@@ -78,6 +78,11 @@ export function useDemoEngagement(band: Band | undefined) {
     update(id, activity => ({ ...activity, clicks: Math.min(Number.MAX_SAFE_INTEGER, activity.clicks + 1) }));
   }, [id, update]);
 
+  const recordWatch = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (id === undefined || !event.isTrusted || event.defaultPrevented) return;
+    update(id, activity => ({ ...activity, clicks: Math.min(Number.MAX_SAFE_INTEGER, activity.clicks + 1) }));
+  }, [id, update]);
+
   const share = useCallback(async () => {
     if (!band || sharing.current) return;
     const selectedBand = band;
@@ -95,7 +100,7 @@ export function useDemoEngagement(band: Band | undefined) {
         try {
           await navigator.share({
             title: `${selectedBand.name} · Less Than 10 Listeners`,
-            text: 'Explore this fictional discovery demo.',
+            text: 'Explore this fictional YouTube music video discovery demo.',
             url: bandLink,
           });
           update(selectedBand.id, activity => ({ ...activity, shares: Math.min(Number.MAX_SAFE_INTEGER, activity.shares + 1) }));
@@ -115,7 +120,7 @@ export function useDemoEngagement(band: Band | undefined) {
 
   return {
     metrics: (id !== undefined ? activities[id] : undefined) ?? empty,
-    toggleLove, recordClick, share, shareBusy, storageAvailable, bandLink, qrLink,
+    toggleLove, recordClick, recordWatch, share, shareBusy, storageAvailable, bandLink, qrLink,
     status: notice && notice.id === id ? notice.text : '',
   };
 }
