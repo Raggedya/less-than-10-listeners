@@ -1,0 +1,31 @@
+name: Validate YouTube Video Pivot
+
+on:
+  push:
+    branches: [youtube-video-pivot]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Check TypeScript
+        run: pnpm --filter @workspace/less-than-10 run typecheck
+      - name: Build static preview
+        env:
+          PORT: 5173
+          BASE_PATH: /less-than-10-listeners/
+        run: pnpm --filter @workspace/less-than-10 run build
