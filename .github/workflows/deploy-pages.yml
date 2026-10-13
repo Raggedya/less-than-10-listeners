@@ -36,6 +36,8 @@ jobs:
           PORT: 5173
           BASE_PATH: /less-than-10-listeners/
         run: pnpm --filter @workspace/less-than-10 run build
+      - name: Include independent Gig Roulette preview
+        run: mkdir -p artifacts/less-than-10/dist/public/gig-roulette && cp gig-roulette/index.html artifacts/less-than-10/dist/public/gig-roulette/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
