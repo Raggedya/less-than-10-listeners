@@ -206,7 +206,7 @@ export function Coverflow({ bands, onSelect, initialIndex = 0 }: { bands: Band[]
       <div
         ref={root} data-testid="coverflow" data-position={position.toFixed(4)} data-phase={phase}
         className="lt-reel" style={{ height: card + 64, perspective: 1000 }}
-        role="group" aria-roledescription="carousel" aria-label="Five fictional demo bands. Swipe or use left and right arrow keys."
+        role="group" aria-roledescription="carousel" aria-label="Five fictional demo video selections. Swipe or use left and right arrow keys."
         tabIndex={0}
         onKeyDown={event => {
           if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
@@ -231,11 +231,11 @@ export function Coverflow({ bands, onSelect, initialIndex = 0 }: { bands: Band[]
                 zIndex: 10 - Math.round(abs * 3), opacity: Math.max(0.12, 1 - abs * 0.28),
               }}>
               <img src={getStartingCountArtwork(band.startingListeners, import.meta.env.BASE_URL)}
-                className="lt-art-image" alt={`${band.startingListeners} monthly listeners when discovered, sculptural neon-glass numeral`}
+                className="lt-art-image" alt={`${band.startingListeners} views when discovered, sculptural neon-glass numeral`}
                 draggable={false} decoding="async" loading="eager"
                 style={{ opacity: 1 - Math.min(abs, 1.5) * 0.19 }} />
               <div className="lt-panel-glass" />
-              <div className="lt-listener-caption">MONTHLY LISTENERS WHEN DISCOVERED</div>
+              <div className="lt-listener-caption">VIEWS WHEN DISCOVERED</div>
               <div className="lt-panel-frame" />
               {isSelected && phase === 'idle' && <div key={stopId} className="lt-detent-flash" />}
             </div>
