@@ -78,7 +78,7 @@ export default function Home() {
             <p data-testid="text-starting">Started with <span className="ltf-gold">{band.startingListeners}</span> views when discovered</p>
             <p data-testid="text-clicks"><span className="ltf-gold">{metrics.clicks}</span> more have clicked to watch on this device</p>
           </div>
-          <button data-testid="button-watch-video" type="button" onClick={() => setVideoOpen(true)} className="ltf-listen">
+          <button data-testid="button-watch-video" type="button" onClick={event => { eng.recordWatch(event); setVideoOpen(true); }} className="ltf-listen">
             <Play size={18} fill="#2f9dff" color="#2f9dff" /> Watch video
           </button>
           <VideoPlayer
