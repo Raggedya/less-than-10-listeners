@@ -1,10 +1,12 @@
-/** Static demo-only band shape. No server or Spotify API is required. */
+/** Static demo-only video discovery shape. No server or Spotify API is required. */
 export interface Band {
   id: number;
   name: string;
   genre: string;
   trackName: string;
   spotifyUrl: string;
+  videoId?: string;
+  videoUrl?: string;
   startingListeners: number;
   startingDate: string;
   currentListeners: number;
