@@ -1,0 +1,42 @@
+name: Build Crowd Surf Publisher Desktop
+
+on:
+  push:
+    branches:
+      - build-crowd-surf-publisher
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: tools/crowd-surf-publisher
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/crowd-surf-publisher/requirements.txt
+      - name: Install build dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Validate source
+        run: python -m py_compile app.py
+      - name: Build standalone Windows application
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name CrowdSurfPublisher app.py
+      - name: Verify executable
+        shell: pwsh
+        run: |
+          $exe = Get-Item "dist/CrowdSurfPublisher.exe"
+          if ($exe.Length -lt 5MB) { throw "Executable is unexpectedly small: $($exe.Length) bytes" }
+          Write-Host "Built $($exe.FullName) ($($exe.Length) bytes)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CrowdSurfPublisher-Windows-v1.0.0
+          path: tools/crowd-surf-publisher/dist/CrowdSurfPublisher.exe
+          if-no-files-found: error
+          retention-days: 7
