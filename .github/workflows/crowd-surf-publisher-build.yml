@@ -36,7 +36,7 @@ jobs:
           Write-Host "Built $($exe.FullName) ($($exe.Length) bytes)"
       - uses: actions/upload-artifact@v4
         with:
-          name: CrowdSurfPublisher-Windows-v1.0.0
+          name: CrowdSurfPublisher-Windows-v1.1.0
           path: tools/crowd-surf-publisher/dist/CrowdSurfPublisher.exe
           if-no-files-found: error
           retention-days: 7

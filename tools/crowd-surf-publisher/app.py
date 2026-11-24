@@ -18,9 +18,44 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 
 APP_NAME = "Crowd Surf Publisher"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
 API_ROOT = "https://crowd-surf-publisher.raggedya.chatgpt.site"
-CTA_TYPES = ["Spotify", "Bandcamp", "Instagram", "Facebook", "TikTok", "YouTube", "Tickets", "Events", "Merch", "Website", "Other"]
+ICON_LIBRARY = [
+    ("Spotify", "spotify", "Music"), ("Bandcamp", "bandcamp", "Music"),
+    ("Apple Music", "applemusic", "Music"), ("YouTube", "youtube", "Music"),
+    ("YouTube Music", "youtubemusic", "Music"), ("SoundCloud", "soundcloud", "Music"),
+    ("Amazon Music", "amazonmusic", "Music"), ("Deezer", "deezer", "Music"),
+    ("Tidal", "tidal", "Music"), ("Music / Listen", "music", "Music"),
+    ("Instagram", "instagram", "Social"), ("Facebook", "facebook", "Social"),
+    ("TikTok", "tiktok", "Social"), ("X / Twitter", "x", "Social"),
+    ("Threads", "threads", "Social"), ("Bluesky", "bluesky", "Social"),
+    ("LinkedIn", "linkedin", "Social"), ("Linktree", "linktree", "Social"),
+    ("Tickets", "tickets", "Gig"), ("Events", "events", "Gig"),
+    ("Tour Dates", "tour", "Gig"), ("Venue / Map", "map", "Gig"),
+    ("Merch", "merch", "Commerce"), ("Shop", "shop", "Commerce"),
+    ("Donate / Support", "support", "Commerce"), ("Patreon", "patreon", "Commerce"),
+    ("Website", "website", "Contact"), ("Contact Us", "contact", "Contact"),
+    ("Email", "email", "Contact"), ("Newsletter", "newsletter", "Contact"),
+    ("Phone", "phone", "Contact"), ("Download", "download", "General"),
+    ("Press / News", "news", "General"), ("Video", "video", "General"),
+    ("Photo Gallery", "photos", "General"), ("Information", "info", "General"),
+    ("External Link", "external", "General"), ("Custom Link", "other", "General"),
+]
+CTA_TYPES = [name for name, _icon_id, _category in ICON_LIBRARY]
+ICON_NAME_TO_ID = {name: icon_id for name, icon_id, _category in ICON_LIBRARY}
+ICON_ID_TO_NAME = {icon_id: name for name, icon_id, _category in ICON_LIBRARY}
+ICON_GLYPHS = {
+    "spotify": "≋", "bandcamp": "▰", "applemusic": "♫", "youtube": "▶",
+    "youtubemusic": "◉", "soundcloud": "☁", "amazonmusic": "a", "deezer": "▥",
+    "tidal": "◆", "music": "♪", "instagram": "◎", "facebook": "f",
+    "tiktok": "♪", "x": "X", "threads": "@", "bluesky": "⌁",
+    "linkedin": "in", "linktree": "✱", "tickets": "▣", "events": "□",
+    "tour": "★", "map": "⌖", "merch": "♜", "shop": "▱",
+    "support": "♥", "patreon": "P", "website": "◎", "contact": "✉",
+    "email": "✉", "newsletter": "▤", "phone": "☎", "download": "↓",
+    "news": "▤", "video": "▶", "photos": "▧", "info": "i",
+    "external": "↗", "other": "+",
+}
 CONFIG_DIR = Path(os.environ.get("APPDATA", Path.home())) / "CrowdSurfPublisher"
 CONFIG_FILE = CONFIG_DIR / "settings.json"
 
@@ -158,6 +193,7 @@ class CrowdSurfPublisher(tk.Tk):
         self.public_url_var = tk.StringVar()
         self.qr_photo = None
         self.links = []
+        self.icon_picker_photos = []
         self.api = PublisherApi(self.load_or_request_key())
         self.configure_styles()
         self.build_ui()
@@ -212,7 +248,9 @@ class CrowdSurfPublisher(tk.Tk):
         self.tree.column("status", width=78, anchor="center", stretch=False)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self.on_library_select)
-        tk.Button(left, text="REFRESH LIBRARY", command=self.refresh_library, bg="#251a30", fg="#ffffff", relief="flat", pady=9).pack(fill="x", pady=(10, 0))
+        self.tree.bind("<Double-1>", self.edit_selected)
+        tk.Button(left, text="EDIT SELECTED", command=self.edit_selected, bg="#f6f23d", fg="#110a16", activebackground="#ffffff", relief="flat", pady=10, font=("Segoe UI", 9, "bold")).pack(fill="x", pady=(10, 0))
+        tk.Button(left, text="REFRESH LIBRARY", command=self.refresh_library, bg="#251a30", fg="#ffffff", relief="flat", pady=9).pack(fill="x", pady=(7, 0))
 
         form = tk.Frame(right, bg="#120d18")
         form.pack(fill="both", expand=True)
@@ -221,24 +259,26 @@ class CrowdSurfPublisher(tk.Tk):
         self.file_field(form, "IMAGE", self.artwork_path, self.pick_artwork, 2)
 
         tk.Label(form, text="CALL TO ACTION LINKS · UP TO 4", bg="#120d18", fg="#aaa2b0", font=("Segoe UI", 9, "bold")).grid(row=3, column=0, columnspan=4, sticky="w", pady=(17, 7))
+        tk.Label(form, text="ICON — CLICK TO CHOOSE", bg="#120d18", fg="#f6f23d", font=("Segoe UI", 8, "bold")).grid(row=4, column=0, sticky="w", padx=(0, 8))
+        tk.Label(form, text="BUTTON LABEL (OPTIONAL)", bg="#120d18", fg="#8f8595", font=("Segoe UI", 8, "bold")).grid(row=4, column=1, sticky="w", padx=(0, 8))
+        tk.Label(form, text="DESTINATION URL — MUST START WITH HTTPS://", bg="#120d18", fg="#8f8595", font=("Segoe UI", 8, "bold")).grid(row=4, column=2, columnspan=2, sticky="w")
         for i in range(4):
-            kind = tk.StringVar(value=CTA_TYPES[i] if i < 2 else "Other")
+            kind = tk.StringVar(value="Website")
             label = tk.StringVar(value="")
             url = tk.StringVar(value="")
             self.links.append((kind, label, url))
-            combo = ttk.Combobox(form, textvariable=kind, values=CTA_TYPES, width=13, state="readonly")
-            combo.grid(row=4+i, column=0, sticky="ew", padx=(0, 8), pady=4)
-            tk.Entry(form, textvariable=label, bg="#1a1321", fg="#ffffff", insertbackground="#ffffff", relief="flat", font=("Segoe UI", 10)).grid(row=4+i, column=1, sticky="ew", padx=(0, 8), pady=4, ipady=9)
-            tk.Entry(form, textvariable=url, bg="#1a1321", fg="#ffffff", insertbackground="#ffffff", relief="flat", font=("Segoe UI", 10)).grid(row=4+i, column=2, columnspan=2, sticky="ew", pady=4, ipady=9)
+            tk.Button(form, textvariable=kind, command=lambda v=kind: self.open_icon_picker(v), anchor="w", bg="#342441", fg="#ffffff", activebackground="#50365f", activeforeground="#ffffff", relief="flat", padx=11, pady=10, font=("Segoe UI", 9, "bold")).grid(row=5+i, column=0, sticky="ew", padx=(0, 8), pady=4)
+            tk.Entry(form, textvariable=label, bg="#1a1321", fg="#ffffff", insertbackground="#ffffff", relief="flat", font=("Segoe UI", 10)).grid(row=5+i, column=1, sticky="ew", padx=(0, 8), pady=4, ipady=9)
+            tk.Entry(form, textvariable=url, bg="#1a1321", fg="#ffffff", insertbackground="#ffffff", relief="flat", font=("Segoe UI", 10)).grid(row=5+i, column=2, columnspan=2, sticky="ew", pady=4, ipady=9)
 
         action_row = tk.Frame(form, bg="#120d18")
-        action_row.grid(row=8, column=0, columnspan=4, sticky="ew", pady=(17, 8))
+        action_row.grid(row=9, column=0, columnspan=4, sticky="ew", pady=(17, 8))
         tk.Checkbutton(action_row, text="PUBLISHED", variable=self.published_var, bg="#120d18", fg="#ffffff", selectcolor="#291b34", activebackground="#120d18", activeforeground="#ffffff", font=("Segoe UI", 11, "bold")).pack(side="left")
         self.save_button = tk.Button(action_row, text="SAVE + PUBLISH", command=self.save_clicked, bg="#f6f23d", fg="#110a16", activebackground="#ffffff", relief="flat", padx=25, pady=12, font=("Segoe UI", 11, "bold"))
         self.save_button.pack(side="right")
 
         output = tk.Frame(form, bg="#0b0710", padx=15, pady=13)
-        output.grid(row=9, column=0, columnspan=4, sticky="nsew", pady=(9, 0))
+        output.grid(row=10, column=0, columnspan=4, sticky="nsew", pady=(9, 0))
         tk.Label(output, text="PUBLIC LINK", bg="#0b0710", fg="#aaa2b0", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w")
         self.url_entry = tk.Entry(output, textvariable=self.public_url_var, bg="#17111e", fg="#ffffff", relief="flat", state="readonly", readonlybackground="#17111e", font=("Segoe UI", 10))
         self.url_entry.grid(row=1, column=0, sticky="ew", pady=(5, 9), ipady=8)
@@ -252,7 +292,7 @@ class CrowdSurfPublisher(tk.Tk):
         form.columnconfigure(1, weight=1)
         form.columnconfigure(2, weight=3)
         form.columnconfigure(3, weight=0)
-        form.rowconfigure(9, weight=1)
+        form.rowconfigure(10, weight=1)
 
         footer = tk.Label(self, textvariable=self.status_var, bg="#060409", fg="#bdb5c3", anchor="w", padx=24, pady=8, font=("Segoe UI", 9))
         footer.pack(fill="x")
@@ -276,6 +316,62 @@ class CrowdSurfPublisher(tk.Tk):
         if path:
             self.artwork_path.set(path)
 
+    def open_icon_picker(self, target_var):
+        picker = tk.Toplevel(self)
+        picker.title("Choose a call-to-action icon")
+        picker.geometry("760x620")
+        picker.minsize(640, 500)
+        picker.configure(bg="#0b0710")
+        picker.transient(self)
+        picker.grab_set()
+        tk.Label(picker, text="CHOOSE AN ICON", bg="#0b0710", fg="#f6f23d", font=("Arial Black", 19)).pack(anchor="w", padx=22, pady=(18, 4))
+        tk.Label(picker, text="Music, social media, tickets, merchandise, contact and general actions", bg="#0b0710", fg="#b7aebe", font=("Segoe UI", 10)).pack(anchor="w", padx=22, pady=(0, 12))
+        search_var = tk.StringVar()
+        search = tk.Entry(picker, textvariable=search_var, bg="#211829", fg="#ffffff", insertbackground="#ffffff", relief="flat", font=("Segoe UI", 11))
+        search.pack(fill="x", padx=22, pady=(0, 12), ipady=9)
+        search.insert(0, "")
+        outer = tk.Frame(picker, bg="#0b0710")
+        outer.pack(fill="both", expand=True, padx=18, pady=(0, 18))
+        canvas = tk.Canvas(outer, bg="#0b0710", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+        grid = tk.Frame(canvas, bg="#0b0710")
+        grid_id = canvas.create_window((0, 0), window=grid, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        def choose(name):
+            target_var.set(name)
+            picker.destroy()
+
+        def render(*_args):
+            for child in grid.winfo_children():
+                child.destroy()
+            query = search_var.get().strip().lower()
+            items = [item for item in ICON_LIBRARY if not query or query in item[0].lower() or query in item[2].lower()]
+            self.icon_picker_photos = []
+            for index, (name, icon_id, category) in enumerate(items):
+                thumb = Image.new("RGB", (46, 46), "#f6f23d")
+                draw = ImageDraw.Draw(thumb)
+                glyph = ICON_GLYPHS.get(icon_id, "•")
+                font = load_font(22 if len(glyph) < 2 else 15)
+                box = draw.textbbox((0, 0), glyph, font=font)
+                draw.text(((46-(box[2]-box[0]))/2, (46-(box[3]-box[1]))/2-2), glyph, font=font, fill="#120d18")
+                photo = ImageTk.PhotoImage(thumb)
+                self.icon_picker_photos.append(photo)
+                button = tk.Button(grid, image=photo, text=f"  {name}\n  {category}", compound="left", anchor="w", command=lambda n=name: choose(n), bg="#211829", fg="#ffffff", activebackground="#50365f", activeforeground="#ffffff", relief="flat", padx=8, pady=7, font=("Segoe UI", 9, "bold"))
+                button.grid(row=index//3, column=index%3, sticky="nsew", padx=5, pady=5)
+            for column in range(3):
+                grid.columnconfigure(column, weight=1)
+            grid.update_idletasks()
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        grid.bind("<Configure>", lambda _event: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>", lambda event: canvas.itemconfigure(grid_id, width=event.width))
+        search_var.trace_add("write", render)
+        render()
+        search.focus_set()
+
     def new_record(self):
         self.current_slug = None
         self.current_record = None
@@ -285,7 +381,7 @@ class CrowdSurfPublisher(tk.Tk):
         self.published_var.set(True)
         self.public_url_var.set("")
         for kind, label, url in self.links:
-            kind.set("Other")
+            kind.set("Website")
             label.set("")
             url.set("")
         self.qr_label.configure(image="", text="QR appears after saving")
@@ -309,6 +405,13 @@ class CrowdSurfPublisher(tk.Tk):
         if selection:
             self.run_task("Opening edition…", lambda: self._load_record(selection[0]))
 
+    def edit_selected(self, _event=None):
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showinfo("Edit edition", "Select an edition in the library first.", parent=self)
+            return
+        self.run_task("Opening edition for editing…", lambda: self._load_record(selection[0]))
+
     def _load_record(self, slug):
         record = self.api.get_band(slug)
         self.after(0, lambda: self.show_record(record))
@@ -324,22 +427,29 @@ class CrowdSurfPublisher(tk.Tk):
         links = record.get("links", [])
         for i, (kind, label, url) in enumerate(self.links):
             link = links[i] if i < len(links) else {}
-            display_kind = str(link.get("icon", "Other")).title()
-            kind.set(display_kind if display_kind in CTA_TYPES else "Other")
+            icon_id = str(link.get("icon", "other")).lower().replace("-", "").replace(" ", "")
+            kind.set(ICON_ID_TO_NAME.get(icon_id, "Custom Link"))
             label.set(link.get("label", ""))
             url.set(link.get("url", ""))
         self.show_qr(record.get("publicUrl", ""))
-        self.status_var.set(f"Editing {record.get('title', '')}")
+        self.status_var.set(f"Editing {record.get('title', '')} — saved links restored; change anything and press SAVE + PUBLISH")
 
     def collect_links(self):
         result = []
         for kind, label, url in self.links:
             address = url.get().strip()
+            label_text = label.get().strip()
+            if not address and valid_url(label_text):
+                address = label_text
+                label_text = ""
             if not address:
+                if label_text:
+                    raise ValueError(f"'{label_text}' has a button label but no destination URL. Paste the link into the long URL box.")
                 continue
             if not valid_url(address):
                 raise ValueError(f"Link must start with http:// or https://: {address}")
-            result.append({"icon": kind.get().lower(), "label": (label.get().strip() or kind.get()).upper(), "url": address})
+            icon_id = ICON_NAME_TO_ID.get(kind.get(), "other")
+            result.append({"icon": icon_id, "label": (label_text or kind.get()).upper(), "url": address})
         return result
 
     def save_clicked(self):
